@@ -6,24 +6,32 @@ public class Supervisor implements Runnable {
     }
 
     public void stopProgram() {
-        Program.programThread.interrupt();
         System.out.println("SUPERVISOR: Exit ");
+        program.stop();
     }
 
     public void startProgram() {
-        Program.programThread = new Thread(new Program());
-        Program.state = States.RUNNING;
-        Program.programThread.start();
         System.out.println("SUPERVISOR: Restart");
+        Thread newThread = new Thread(program);
+        program.setProgramThread(newThread);
+        program.setState(States.RUNNING);
+        newThread.start();
     }
 
     @Override
     public void run() {
         System.out.println("SUPERVISOR: Start");
-        startProgram();
-        while (!Program.programThread.isInterrupted()) {
+        while (true) {
             synchronized (program) {
-                States state = Program.state;
+                try {
+                    program.wait();
+                } catch (InterruptedException e) {
+                    program.stop();
+                    break;
+                }
+
+                States state = program.getState();
+
 
                 if (state.equals(States.STOPPING)) {
                     startProgram();
@@ -31,12 +39,11 @@ public class Supervisor implements Runnable {
 
                 else if (state.equals(States.FATAL_ERROR)) {
                     stopProgram();
+                    break;
                 }
                 else {
                     System.out.println("SUPERVISOR: Pass");
                 }
-
-                program.notify();
             }
         }
     }

@@ -1,21 +1,34 @@
 
 public class Program implements Runnable {
-    protected static States state = States.UNKNOWN;
-    protected static Thread programThread;
+    protected volatile States state = States.UNKNOWN;
+    protected Thread programThread;
 
-    public void setState(States newState) {
+    public synchronized void setState(States newState) {
         state = newState;
         System.out.println("Daemon: State is changed - " + state);
         notifyAll();
     }
 
-    public States getState() {
+    public synchronized States getState() {
         return state;
+    }
+
+    public void setProgramThread(Thread thread) {
+        this.programThread = thread;
+    }
+
+    public Thread getProgramThread() {
+        return programThread;
+    }
+
+    public void stop() {
+        programThread.interrupt();
     }
 
     @Override
     public void run() {
         System.out.println("Program: Start");
+
     }
 
 }

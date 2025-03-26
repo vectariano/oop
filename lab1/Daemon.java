@@ -3,49 +3,48 @@ import java.util.Random;
 public class Daemon implements Runnable {
     private final Random random = new Random();
     private final Program program;
+    private volatile boolean running = true;
 
     public Daemon(Program program) {
         this.program = program;
     }
 
+    public void stop() {
+        running = false;
+    }
+
     @Override
     public void run() {
-        while (true) {
+        while (running) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
-            synchronized (program) {
-                while (Program.state.equals(States.UNKNOWN)) {
-                     Program.state = States.values()[random.nextInt(States.values().length)];
-                    System.out.println("Daemon: " + Program.state);
-                }
-//                if (Program.state.equals(States.RUNNING)) {
-//                    System.out.println("Daemon: Runs");
-//                }
-//
-//                else {
-//                    System.out.println("Daemon: " + Program.state);
-//                }
 
-                try {
-                    if (random.nextInt(100) > 45) {
-                        program.setState(States.RUNNING);
-                    }
-                    else if (random.nextInt(100) < 45 &&
-                            random.nextInt(100) > 10) {
-                        program.setState(States.STOPPING);
-                    }
-                    else {
-                        program.setState(States.FATAL_ERROR);
-                    }
-                    program.wait();
-                    program.notifyAll();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+            synchronized (program) {
+                int probability = random.nextInt(100);
+                States newState;
+
+                if (probability > 10 && probability < 50) {
+                    newState = States.STOPPING;
                 }
+                else if (probability > 50) {
+                    newState = States.RUNNING;
+                }
+                else {
+                    newState = States.FATAL_ERROR;
+                }
+                program.setState(newState);
+                program.notifyAll();
+
+                if (newState.equals(States.FATAL_ERROR)) {
+                    stop();
+                    break;
+                }
+
             }
         }
+        System.out.println("Daemon: Stopped");
     }
 }
