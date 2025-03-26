@@ -1,8 +1,8 @@
 import java.util.Random;
 
 public class Daemon implements Runnable {
-    private final Program program;
     private final Random random = new Random();
+    private final Program program;
 
     public Daemon(Program program) {
         this.program = program;
@@ -12,19 +12,39 @@ public class Daemon implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(random.nextInt(5000));
-                States state = States.values()[random.nextInt(States.values().length)];
-
-                synchronized (program) {
-                    if (!state.equals(States.UNKNOWN)) {
-                        program.setState(state);
-                        System.out.println("Daemon: State is changed - " + state);
-                    }
-                }
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-                break;
+            synchronized (program) {
+                while (Program.state.equals(States.UNKNOWN)) {
+                     Program.state = States.values()[random.nextInt(States.values().length)];
+                    System.out.println("Daemon: " + Program.state);
+                }
+//                if (Program.state.equals(States.RUNNING)) {
+//                    System.out.println("Daemon: Runs");
+//                }
+//
+//                else {
+//                    System.out.println("Daemon: " + Program.state);
+//                }
+
+                try {
+                    if (random.nextInt(100) > 45) {
+                        program.setState(States.RUNNING);
+                    }
+                    else if (random.nextInt(100) < 45 &&
+                            random.nextInt(100) > 10) {
+                        program.setState(States.STOPPING);
+                    }
+                    else {
+                        program.setState(States.FATAL_ERROR);
+                    }
+                    program.wait();
+                    program.notifyAll();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
