@@ -23,12 +23,6 @@ public class Supervisor implements Runnable {
         System.out.println("SUPERVISOR: Start");
         while (true) {
             synchronized (program) {
-                try {
-                    program.wait();
-                } catch (InterruptedException e) {
-                    program.stop();
-                    break;
-                }
 
                 States state = program.getState();
 
@@ -44,6 +38,16 @@ public class Supervisor implements Runnable {
                 else {
                     System.out.println("SUPERVISOR: Pass");
                 }
+
+                program.notify();
+
+                try {
+                    program.wait();
+                } catch (InterruptedException e) {
+                    program.stop();
+                    break;
+                }
+
             }
         }
     }

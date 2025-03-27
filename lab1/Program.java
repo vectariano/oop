@@ -1,4 +1,3 @@
-
 public class Program implements Runnable {
     protected volatile States state = States.UNKNOWN;
     protected Thread programThread;

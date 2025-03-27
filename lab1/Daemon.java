@@ -16,33 +16,30 @@ public class Daemon implements Runnable {
     @Override
     public void run() {
         while (running) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             synchronized (program) {
                 int probability = random.nextInt(100);
                 States newState;
 
                 if (probability > 10 && probability < 50) {
                     newState = States.STOPPING;
-                }
-                else if (probability > 50) {
+                } else if (probability > 50) {
                     newState = States.RUNNING;
-                }
-                else {
+                } else {
                     newState = States.FATAL_ERROR;
                 }
+
                 program.setState(newState);
-                program.notifyAll();
 
                 if (newState.equals(States.FATAL_ERROR)) {
                     stop();
                     break;
                 }
 
+                try {
+                    program.wait();
+                } catch (InterruptedException e) {
+                    program.programThread.interrupt();
+                }
             }
         }
         System.out.println("Daemon: Stopped");
