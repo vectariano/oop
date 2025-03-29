@@ -1,6 +1,7 @@
 public class Program implements Runnable {
-    protected volatile States state = States.UNKNOWN;
+    private volatile States state = States.UNKNOWN;
     protected Thread programThread;
+    private volatile boolean running = true;
 
     public synchronized void setState(States newState) {
         state = newState;
@@ -12,22 +13,35 @@ public class Program implements Runnable {
         return state;
     }
 
-    public void setProgramThread(Thread thread) {
-        this.programThread = thread;
+    public void restart() {
+        running = true;
+        state = States.RUNNING;
+        System.out.println("Program: Restarted");
+        notifyAll();
     }
 
-    public Thread getProgramThread() {
-        return programThread;
-    }
+//    public void setProgramThread(Thread thread) {
+//        this.programThread = thread;
+//    }
+
+//    public Thread getProgramThread() {
+//        return programThread;
+//    }
 
     public void stop() {
-        programThread.interrupt();
+        Thread.currentThread().interrupt();
     }
 
     @Override
     public void run() {
         System.out.println("Program: Start");
-
+        while (running) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                stop();
+            }
+        }
     }
 
 }
