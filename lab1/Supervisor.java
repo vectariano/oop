@@ -12,10 +12,10 @@ public class Supervisor implements Runnable {
 
     public void startProgram() {
         System.out.println("SUPERVISOR: Restart");
-        Thread newThread = new Thread(program);
-        program.setProgramThread(newThread);
-        program.setState(States.RUNNING);
-        newThread.start();
+//        Thread newThread = new Thread(program);
+//        program.setState(States.RUNNING);
+//        newThread.start();
+        program.restart();
     }
 
     @Override
@@ -25,7 +25,6 @@ public class Supervisor implements Runnable {
             synchronized (program) {
 
                 States state = program.getState();
-
 
                 if (state.equals(States.STOPPING)) {
                     startProgram();

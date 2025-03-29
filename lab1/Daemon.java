@@ -15,6 +15,7 @@ public class Daemon implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("Daemon: " + program.getState());
         while (running) {
             synchronized (program) {
                 int probability = random.nextInt(100);
